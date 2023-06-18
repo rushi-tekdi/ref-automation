@@ -12,7 +12,7 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-##########################################################################################################################
+  ##########################################################################################################################
   db:
     image: postgres
     container_name: "postgres_db"
@@ -60,7 +60,7 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=cred_ms
       - POSTGRES_PASSWORD=cred_ms_password
-##########################################################################################################################
+  ##########################################################################################################################
   registry:
     image: dockerhub/sunbird-rc-core
     container_name: "registry"
@@ -79,7 +79,7 @@ services:
       - sunbird_sso_url=http://keycloak:8080/auth
       - sunbird_sso_admin_client_id=admin-api
       - sunbird_sso_client_id=registry-frontend
-      - sunbird_sso_admin_client_secret=4a858f16-6023-4f23-bda2-1bc4df1a3e7e
+      - sunbird_sso_admin_client_secret=${KEYCLOAK_SECRET}
       - claims_url=http://claim-ms:8082
       - sign_url=http://certificate-signer:8079/sign
       - sign_health_check_url=http://certificate-signer:8079/health
@@ -109,14 +109,12 @@ services:
     depends_on:
       - es
       - db
-##########################################################################################################################
+  ##########################################################################################################################
   keycloak:
-    image: sunbirdrc/keycloak:latest
-    container_name: "keycloak"
+    image: dockerhub/sunbird-rc-keycloak:nonce
     volumes:
-      - keycloak_data:/opt/jboss/keycloak/imports
+      - ${PWD}/imports:/opt/jboss/keycloak/imports
     environment:
-      - KEYCLOAK_LOGO=https://svgshare.com/i/hCs.svg
       - DB_VENDOR=postgres
       - DB_ADDR=db
       - DB_PORT=5432
@@ -126,134 +124,141 @@ services:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
       - KEYCLOAK_IMPORT=/opt/jboss/keycloak/imports/realm-export.json
-      - KEYCLOAK_FRONTEND_URL=https://localhost/auth
       - PROXY_ADDRESS_FORWARDING=true
+      - KEYCLOAK_LOGO=https://raw.githubusercontent.com/Sunbird-RC/demo-education-registry/federated_edu_registry/imports/ndearLogo.svg
+      - KEYCLOAK_PORTAL_TITLE=Education
+      - KEYCLOAK_PORTAL_SUB_TITLE=
       - VALIDATE_NONCE=false
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9990/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
       - "8080:8080"
       - "9990:9990"
     depends_on:
       - db
-##########################################################################################################################
+  ##########################################################################################################################
   telemetry_service_clickhouse:
     image: clickhouse/clickhouse-server
     container_name: telemetry-clickhouse
     volumes:
       - clickhouse_data:/var/lib/clickhouse
     environment:
-      CLICKHOUSE_USER : clickhouse
-      CLICKHOUSE_PASSWORD : "*!73uK*9xLEsnhIR" 
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: "*!73uK*9xLEsnhIR"
     ports:
-      - '8123:8123'
-      - '9000:9000'
+      - "8123:8123"
+      - "9000:9000"
   telemetry-service:
     image: dubea/telemetry-service1:latest
     ports:
       - 9001:9001
     environment:
       telemetry_local_storage_type: "clickhouse"
-      CLICKHOUSE_HOST : "http://telemetry-clickhouse:8123"
-      CLICKHOUSE_USER : "clickhouse"
-      CLICKHOUSE_PASSWORD : "*!73uK*9xLEsnhIR" 
+      CLICKHOUSE_HOST: "http://telemetry-clickhouse:8123"
+      CLICKHOUSE_USER: "clickhouse"
+      CLICKHOUSE_PASSWORD: "*!73uK*9xLEsnhIR"
     depends_on:
       - telemetry_service_clickhouse
-##########################################################################################################################
+  ##########################################################################################################################
   bff_service:
     image: dubea/bff:2
     container_name: "bff-service"
     ports:
-      - 3003:3000 
+      - 3003:3000
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
         failure_action: rollback
         order: start-first
-     # rollback_config:
+      # rollback_config:
       #  parallelism: 1
-       # delay: 0s
+      # delay: 0s
       restart_policy:
         condition: on-failure
 
     environment:
-      - name=value    #Need to add the environment varibales in that
+      - name=value #Need to add the environment varibales in that
       - PORT=3000
-      - CRED_URL=http://139.59.45.135:3002
-      - DID_URL=http://139.59.45.135:3000
-      - SCHEMA_URL=http://139.59.45.135:3001
-      - MIDDLEWARE_URL=http://139.59.45.135:3003
+      - CRED_URL=http://localhost:3002
+      - DID_URL=http://localhost:3000
+      - SCHEMA_URL=http://localhost:3001
+      - MIDDLEWARE_URL=http://localhost:3003
       - REALM_ID=sunbird-rc
       - KEYCLOAK_CLIENT_ID=admin-api
-      - KEYCLOAK_CLIENT_SECRET=4a858f16-6023-4f23-bda2-1bc4df1a3e7e
-      - KEYCLOAK_URL=https://ulp-sbrc.uniteframework.io/auth/
-      - REGISTRY_URL=https://ulp-sbrc.uniteframework.io/registry/
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SECRET}
+      - KEYCLOAK_URL=http://localhost:8080/auth/
+      - REGISTRY_URL=http://localhost:8081/
       - TESTVAR=ulp reference environment by tekdi
       - PROOF_OF_ASSESSMENT=clf0qfvna0000tj154706406y
       - PROOF_OF_ENROLLMENT=clf0rjgov0002tj15ml0fdest
       - PROOF_OF_BENIFIT=clf0wvyjs0008tj154rc071i1
       - TELEMETRY_URL=https://ulp.uniteframework.io/telemetry
- #############################################################################################################################
+  #############################################################################################################################
   bulk_issuance:
     image: dubea/bulk-issuance:1
     container_name: "bulk-issuance"
     ports:
-      - 3007:3007 
+      - 3007:3007
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
         failure_action: rollback
         order: start-first
-     # rollback_config:
+      # rollback_config:
       #  parallelism: 1
-       # delay: 0s
+      # delay: 0s
       restart_policy:
         condition: on-failure
 
     environment:
-      - name=value    #Need to add the environment varibales in that
+      - name=value #Need to add the environment varibales in that
       - PORT=3007
-      - CRED_URL=http://139.59.45.135:3002
-      - DID_URL=http://139.59.45.135:3000
-      - SCHEMA_URL=http://139.59.45.135:3001
-      - MIDDLEWARE_URL=http://139.59.45.135:3003
-      - KEYCLOAK_URL=https://ulp-sbrc.uniteframework.io/auth/
-      - REGISTRY_URL=https://ulp-sbrc.uniteframework.io/registry/
-#      //schemaId
+      - CRED_URL=http://localhost:3002
+      - DID_URL=http://localhost:3000
+      - SCHEMA_URL=http://localhost:3001
+      - MIDDLEWARE_URL=http://localhost:3003
+      - KEYCLOAK_URL=http://localhost:8080/auth/
+      - REGISTRY_URL=http://localhost:8081/
+      #      //schemaId
       - PROOF_OF_ASSESSMENT=clf0qfvna0000tj154706406y
       - PROOF_OF_ENROLLMENT=clf0rjgov0002tj15ml0fdest
       - PROOF_OF_BENIFIT=clf0wvyjs0008tj154rc071i1
-     #keycloak
+      #keycloak
       - REALM_ID=sunbird-rc
       - KEYCLOAK_CLIENT_ID=admin-api
-      - KEYCLOAK_CLIENT_SECRET=4a858f16-6023-4f23-bda2-1bc4df1a3e7e
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SECRET}
 
   ##########################################################################################################################
   credential_ms_service:
     image: dubea/credential-ms:sbrc
     container_name: "credential_ms"
     ports:
-      - 3002:3333 
+      - 3002:3333
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
         failure_action: rollback
         order: start-first
-    #  rollback_config:
-     #   parallelism: 1
+      #  rollback_config:
+      #   parallelism: 1
       #  delay: 0s
       restart_policy:
         condition: on-failure
@@ -270,16 +275,16 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
         failure_action: rollback
         order: start-first
-     # rollback_config:
+      # rollback_config:
       #  parallelism: 1
-       # delay: 0s
+      # delay: 0s
       restart_policy:
         condition: on-failure
 
@@ -295,21 +300,21 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
         failure_action: rollback
         order: start-first
-     # rollback_config:
+      # rollback_config:
       #  parallelism: 1
-       # delay: 0s
+      # delay: 0s
       restart_policy:
         condition: on-failure
     environment:
       - DATABASE_URL=postgressql://identity:identity_password@postgresql:1000/postgres?schema=public
-  
+
 volumes:
   postgres_data:
     driver: local
