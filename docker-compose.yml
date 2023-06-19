@@ -314,7 +314,26 @@ services:
         condition: on-failure
     environment:
       - DATABASE_URL=postgressql://identity:identity_password@postgresdb_didl3:1000/postgres?schema=public
+##############################################################################################################################
 
+  rc-wallet:
+    image: dubea/ewallet:1
+    container_name: "ewallet"
+    volumes:
+      - ${PWD}/ewallet/config/config.json:/usr/share/nginx/html/assets/config/
+
+    ports:
+      - "82:80"
+#################################################################################################################################
+  rc-varification:
+    image: dubea/varification-portal:1
+    container_name: "verification-portal"
+    volumes:
+      - ${PWD}/varification/config/config.json:/usr/share/nginx/html/assets/config/
+
+    ports:
+      - "85:80"
+#############################################################################################################################
 volumes:
   postgres_data:
     driver: local
