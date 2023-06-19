@@ -209,3 +209,47 @@ Next, let’s enable the file by creating a link from it to the sites-enabled di
 
     sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
 
+
+Step 6 - Register your server to the Domain and validate it 
+
+    Register The Server IP in the domain name in A records and wait for the validation. 
+
+
+
+
+Step 7 - Install Certbot 
+
+
+To install certbot for the ubuntu20.04 for nginx use cases follow the below comamnd 
+
+sudo apt install certbot python3-certbot-nginx
+
+sudo certbot 
+
+Then add Your mail id for the validification in the next step.
+
+Then agree the turms and conditions by Typing "Y" + Enter
+
+
+Select option redirecting the http to https access and you are done with the SSL certificates
+
+
+
+Step 8 - Nginx configurations 
+    Go to the /etc/nginx/sites-enabled/ and go to the config file of your domain that we have created 
+
+    add below intity in the file in server block 
+
+
+
+
+save and close the file 
+then run the below commands 
+
+sudo nginx -t 
+sudo systemctl restart nginx 
+
+check the domain name with https access.
+
+
+

@@ -326,5 +326,9 @@ volumes:
     driver: local
   clickhouse_data:
     driver: local
-  keycloak_data:postgresdb_didl3
+  keycloak_data:
     driver: local
+
+networks:
+  application_default:
+    driver: bridge
