@@ -67,7 +67,7 @@ services:
     volumes:
       - ${PWD}/schemas:/home/sunbirdrc/config/public/_schemas
     environment:
-      - connectionInfo_uri=jdbc:postgresql://db:5432/registry
+      - connectionInfo_uri=jdbc:postgresql://postgres_db:5432/registry
       - connectionInfo_username=postgres
       - connectionInfo_password=J93!s27Xma
       - elastic_search_connection_url=es:9200
@@ -264,7 +264,7 @@ services:
         condition: on-failure
 
     environment:
-      - DATABASE_URL=postgresql://cred_ms:cred_ms_password@postgressql:1005/postgres?schema=public
+      - DATABASE_URL=postgresql://cred_ms:cred_ms_password@postgresdb_cred_ms:1005/postgres?schema=public
       - IDENTITY_BASE_URL=http://did_l3_service:3332
   ##########################################################################################################################
   cred_schema_ms_service:
@@ -289,7 +289,7 @@ services:
         condition: on-failure
 
     environment:
-      - DATABASE_URL=postgresql://cred_schemas:cred_schemas_password@postgressql:1001/postgres?schema=public
+      - DATABASE_URL=postgresql://cred_schemas:cred_schemas_password@postgresdb_cred_schema:1001/postgres?schema=public
       - IDENTITY_BASE_URL=http://did_l3_service:3332
   ##########################################################################################################################
   did_l3_service:
@@ -313,7 +313,7 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - DATABASE_URL=postgressql://identity:identity_password@postgresql:1000/postgres?schema=public
+      - DATABASE_URL=postgressql://identity:identity_password@postgresdb_didl3:1000/postgres?schema=public
 
 volumes:
   postgres_data:
@@ -326,5 +326,5 @@ volumes:
     driver: local
   clickhouse_data:
     driver: local
-  keycloak_data:
+  keycloak_data:postgresdb_didl3
     driver: local
