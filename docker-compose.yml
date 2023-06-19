@@ -65,7 +65,7 @@ services:
     image: dockerhub/sunbird-rc-core
     container_name: "registry"
     volumes:
-      - ${PWD}/schemas:/home/sunbirdrc/config/public/_schemas
+      - ./schemas:/home/sunbirdrc/config/public/_schemas
     environment:
       - connectionInfo_uri=jdbc:postgresql://postgres_db:5432/registry
       - connectionInfo_username=postgres
@@ -113,7 +113,7 @@ services:
   keycloak:
     image: dockerhub/sunbird-rc-keycloak:nonce
     volumes:
-      - ${PWD}/imports:/opt/jboss/keycloak/imports
+      - ./imports:/opt/jboss/keycloak/imports
     environment:
       - DB_VENDOR=postgres
       - DB_ADDR=db
@@ -164,7 +164,7 @@ services:
       - telemetry_service_clickhouse
   ##########################################################################################################################
   bff_service:
-    image: dubea/bff:2
+    image: dubea/bff:3
     container_name: "bff-service"
     ports:
       - 3003:3000
@@ -317,19 +317,19 @@ services:
 ##############################################################################################################################
 
   rc-wallet:
-    image: dubea/ewallet:1
+    image: dubea/ewallet:2
     container_name: "ewallet"
-    volumes:
-      - ${PWD}/ewallet/config/config.json:/usr/share/nginx/html/assets/config/
+   # volumes:
+    #  - ./ewallet/config/config.json:/usr/share/nginx/html/assets/config/
 
     ports:
       - "82:80"
 #################################################################################################################################
   rc-varification:
-    image: dubea/varification-portal:1
+    image: dubea/varification-portal:2
     container_name: "verification-portal"
-    volumes:
-      - ${PWD}/varification/config/config.json:/usr/share/nginx/html/assets/config/
+   # volumes:
+    #  - ./varification/config/config.json:/usr/share/nginx/html/assets/config/
 
     ports:
       - "85:80"
