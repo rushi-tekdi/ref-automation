@@ -12,7 +12,7 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-##########################################################################################################################
+  ##########################################################################################################################
   db:
     image: postgres
     container_name: "postgres_db"
@@ -20,7 +20,7 @@ services:
       - ./init-multi-postgres-databases.sh:/docker-entrypoint-initdb.d/init-multi-postgres-databases.sh
     #  - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "9999:5432"
     environment:
       - POSTGRES_DB=registry
       - POSTGRES_USER=postgres
@@ -28,7 +28,7 @@ services:
     env_file:
       - .env
 
-##########################################################################################################################
+  ##########################################################################################################################
   registry:
     image: dockerhub/sunbird-rc-core
     container_name: "registry"
@@ -77,12 +77,13 @@ services:
     depends_on:
       - es
       - db
-##########################################################################################################################
+  ##########################################################################################################################
   keycloak:
     image: sunbirdrc/keycloak:latest
     container_name: "keycloak"
     volumes:
-      - ${PWD}/imports:/opt/jboss/keycloak/imports
+      - ./imports:/opt/jboss/keycloak/imports
+    #  - keycloak_data:/opt/jboss/keycloak
     environment:
       - KEYCLOAK_LOGO=https://svgshare.com/i/hCs.svg
       - DB_VENDOR=postgres
@@ -102,40 +103,40 @@ services:
       - "9990:9990"
     depends_on:
       - db
-##########################################################################################################################
+  ##########################################################################################################################
   telemetry_service_clickhouse:
     image: clickhouse/clickhouse-server
     container_name: telemetry-clickhouse
     volumes:
       - clickhouse_data:/var/lib/clickhouse
     environment:
-      CLICKHOUSE_USER : clickhouse
-      CLICKHOUSE_PASSWORD : "*!73uK*9xLEsnhIR" 
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: "*!73uK*9xLEsnhIR"
     ports:
-      - '8123:8123'
-      - '9000:9000'
+      - "8123:8123"
+      - "9000:9000"
   telemetry-service:
     image: dubea/telemetry-service1:latest
     ports:
       - 9001:9001
     environment:
       telemetry_local_storage_type: "clickhouse"
-      CLICKHOUSE_HOST : "http://telemetry-clickhouse:8123"
-      CLICKHOUSE_USER : "clickhouse"
-      CLICKHOUSE_PASSWORD : "*!73uK*9xLEsnhIR" 
+      CLICKHOUSE_HOST: "http://telemetry-clickhouse:8123"
+      CLICKHOUSE_USER: "clickhouse"
+      CLICKHOUSE_PASSWORD: "*!73uK*9xLEsnhIR"
     depends_on:
       - telemetry_service_clickhouse
-##########################################################################################################################
+  ##########################################################################################################################
   bff_service:
-    image: dubea/bff:3
+    image: dubea/bff:2
     container_name: "bff-service"
     ports:
-      - 3003:3000 
+      - 3003:3000
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
@@ -145,7 +146,7 @@ services:
         condition: on-failure
 
     environment:
-      - name=value    #Need to add the environment varibales in that
+      - name=value #Need to add the environment varibales in that
       - PORT=3000
       - CRED_URL=http://139.59.45.135:3002
       - DID_URL=http://139.59.45.135:3000
@@ -161,17 +162,17 @@ services:
       - PROOF_OF_ENROLLMENT=clf0rjgov0002tj15ml0fdest
       - PROOF_OF_BENIFIT=clf0wvyjs0008tj154rc071i1
       - TELEMETRY_URL=https://ulp.uniteframework.io/telemetry
-################################################################################################################################
+  ################################################################################################################################
   bulk_issuance:
     image: dubea/bulk-issuance:1
     container_name: "bulk-issuance"
     ports:
-      - 3007:3007 
+      - 3007:3007
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
@@ -181,7 +182,7 @@ services:
         condition: on-failure
 
     environment:
-      - name=value    #Need to add the environment varibales in that
+      - name=value #Need to add the environment varibales in that
       - PORT=3007
       - CRED_URL=http://139.59.45.135:3002
       - DID_URL=http://139.59.45.135:3000
@@ -193,22 +194,22 @@ services:
       - PROOF_OF_ASSESSMENT=clf0qfvna0000tj154706406y
       - PROOF_OF_ENROLLMENT=clf0rjgov0002tj15ml0fdest
       - PROOF_OF_BENIFIT=clf0wvyjs0008tj154rc071i1
-     #keycloak
+      #keycloak
       - REALM_ID=sunbird-rc
       - KEYCLOAK_CLIENT_ID=admin-api
       - KEYCLOAK_CLIENT_SECRET=4a858f16-6023-4f23-bda2-1bc4df1a3e7e
 
-##########################################################################################################################
+  ##########################################################################################################################
   credential_ms_service:
     image: dubea/credential-ms:sbrc
     container_name: "credential_ms"
     ports:
-      - 3002:3333 
+      - 3002:3333
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
@@ -220,7 +221,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:J93!s27Xma@db:5432/cred_ms?schema=public
       - IDENTITY_BASE_URL=http://did_l3_service:3332
-##########################################################################################################################
+  ##########################################################################################################################
   cred_schema_ms_service:
     image: dubea/cred-schema-ms:sbrc
     container_name: "cred_schema_ms_service"
@@ -229,8 +230,8 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
@@ -242,7 +243,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:J93!s27Xma@db:5432/cred_ms_schema?schema=public
       - IDENTITY_BASE_URL=http://did_l3_service:3332
-##########################################################################################################################
+  ##########################################################################################################################
   did_l3_service:
     image: dubea/did-l3:sbrc
     container_name: "did_l3_service"
@@ -251,8 +252,8 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager 
-      replicas: 1      
+          - node.role == manager
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 0s
@@ -261,8 +262,10 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - DATABASE_URL=postgressql://identity:identity_password@postgresdb_didl3:1000/postgres?schema=public
-##############################################################################################################################
+      - DATABASE_URL=postgresql://postgres:J93!s27Xma@db:5432/identity?schema=public
+      - JWKS_URI=https://auth.konnect.samagra.io/.well-known/jwks.json
+
+  #############################################################################################################################
 
   rc-wallet:
     image: dubea/ewallet:1
@@ -272,18 +275,18 @@ services:
 
     ports:
       - "82:80"
-#################################################################################################################################
+  #################################################################################################################################
+
   rc-varification:
     image: dubea/varification-portal:2
     container_name: "verification-portal"
     volumes:
-      - ${PWD}/varification/config/config.json:/usr/share/nginx/html/assets/config/
+      - ./varification/config/config.json:/usr/share/nginx/html/assets/config/config.json
 
     ports:
       - "85:80"
 #############################################################################################################################
 
-  
 volumes:
   postgres_data:
     driver: local
