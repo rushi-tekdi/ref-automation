@@ -65,7 +65,7 @@ services:
     image: dockerhub/sunbird-rc-core
     container_name: "registry"
     volumes:
-      - ${PWD}/schemas:/home/sunbirdrc/config/public/_schemas
+      - ./schemas:/home/sunbirdrc/config/public/_schemas
     environment:
       - connectionInfo_uri=jdbc:postgresql://postgres_db:5432/registry
       - connectionInfo_username=postgres
@@ -113,7 +113,7 @@ services:
   keycloak:
     image: dockerhub/sunbird-rc-keycloak:nonce
     volumes:
-      - ${PWD}/imports:/opt/jboss/keycloak/imports
+      - ./imports:/opt/jboss/keycloak/imports
     environment:
       - DB_VENDOR=postgres
       - DB_ADDR=db
@@ -164,7 +164,7 @@ services:
       - telemetry_service_clickhouse
   ##########################################################################################################################
   bff_service:
-    image: dubea/bff:2
+    image: dubea/bff:3
     container_name: "bff-service"
     ports:
       - 3003:3000
@@ -264,7 +264,7 @@ services:
         condition: on-failure
 
     environment:
-      - DATABASE_URL=postgresql://cred_ms:cred_ms_password@postgresdb_cred_ms:1005/postgres?schema=public
+      - DATABASE_URL=postgresql://cred_ms:cred_ms_password@db-cred-ms:1005/postgres?schema=public
       - IDENTITY_BASE_URL=http://did_l3_service:3332
   ##########################################################################################################################
   cred_schema_ms_service:
@@ -289,7 +289,7 @@ services:
         condition: on-failure
 
     environment:
-      - DATABASE_URL=postgresql://cred_schemas:cred_schemas_password@postgresdb_cred_schema:1001/postgres?schema=public
+      - DATABASE_URL=postgresql://cred_schemas:cred_schemas_password@db-cred-schema:1001/postgres?schema=public
       - IDENTITY_BASE_URL=http://did_l3_service:3332
   ##########################################################################################################################
   did_l3_service:
@@ -313,23 +313,23 @@ services:
       restart_policy:
         condition: on-failure
     environment:
-      - DATABASE_URL=postgressql://identity:identity_password@postgresdb_didl3:1000/postgres?schema=public
-##############################################################################################################################
+      - DATABASE_URL=postgressql://identity:identity_password@db-didl3:1000/postgres?schema=public
+  ##############################################################################################################################
 
   rc-wallet:
     image: dubea/ewallet:1
     container_name: "ewallet"
-    volumes:
-      - ${PWD}/ewallet/config/config.json:/usr/share/nginx/html/assets/config/
+    # volumes:
+    #  - ./ewallet/config/config.json:/usr/share/nginx/html/assets/config/
 
     ports:
       - "82:80"
-#################################################################################################################################
+  #################################################################################################################################
   rc-varification:
-    image: dubea/varification-portal:1
+    image: dubea/varification-portal:2
     container_name: "verification-portal"
-    volumes:
-      - ${PWD}/varification/config/config.json:/usr/share/nginx/html/assets/config/
+    # volumes:
+    #  - ./varification/config/config.json:/usr/share/nginx/html/assets/config/
 
     ports:
       - "85:80"

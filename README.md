@@ -2,8 +2,6 @@
 
 # Running the services
 
-## Set PWD in .env file as your current directory path
-
 ## Start DB service
 
 ```bash
