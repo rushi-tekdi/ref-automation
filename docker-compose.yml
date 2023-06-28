@@ -277,7 +277,7 @@ services:
       - "82:80"
   #################################################################################################################################
 
-  rc-varification:
+  rc-verification:
     image: dubea/varification-portal:2
     container_name: "verification-portal"
     volumes:
