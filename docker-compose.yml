@@ -8,10 +8,6 @@ services:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - xpack.security.enabled=false
-
-    ports:
-      - "9200:9200"
-      - "9300:9300"
   ##########################################################################################################################
   db:
     image: postgres
@@ -73,7 +69,7 @@ services:
       - redis_port=6379
       - manager_type=DefinitionsManager
     ports:
-      - "8081:8081"
+      - "18081:8081"
     depends_on:
       - es
       - db
@@ -99,8 +95,8 @@ services:
       - PROXY_ADDRESS_FORWARDING=true
       - VALIDATE_NONCE=false
     ports:
-      - "8080:8080"
-      - "9990:9990"
+      - "18080:8080"
+      - "19990:9990"
     depends_on:
       - db
   ##########################################################################################################################
@@ -113,12 +109,12 @@ services:
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: "*!73uK*9xLEsnhIR"
     ports:
-      - "8123:8123"
-      - "9000:9000"
+      - "18123:8123"
+      - "19000:9000"
   telemetry-service:
     image: dubea/telemetry-service1:latest
     ports:
-      - 9001:9001
+      - 19001:9001
     environment:
       telemetry_local_storage_type: "clickhouse"
       CLICKHOUSE_HOST: "http://telemetry-clickhouse:8123"
@@ -204,7 +200,7 @@ services:
     image: dubea/credential-ms:sbrc
     container_name: "credential_ms"
     ports:
-      - 3002:3333
+      - 13002:3333
     deploy:
       placement:
         constraints:
@@ -226,7 +222,7 @@ services:
     image: dubea/cred-schema-ms:sbrc
     container_name: "cred_schema_ms_service"
     ports:
-      - 3001:3000
+      - 13001:3000
     deploy:
       placement:
         constraints:
@@ -248,7 +244,7 @@ services:
     image: dubea/did-l3:sbrc
     container_name: "did_l3_service"
     ports:
-      - 3000:3332
+      - 13000:3332
     deploy:
       placement:
         constraints:
@@ -273,8 +269,6 @@ services:
     volumes:
       - ./ewallet/config/config.json:/usr/share/nginx/html/assets/config/config.json
 
-    ports:
-      - "82:80"
   #################################################################################################################################
 
   rc-verification:
@@ -283,10 +277,12 @@ services:
     volumes:
       - ./varification/config/config.json:/usr/share/nginx/html/assets/config/config.json
 
-    ports:
-      - "85:80"
 #############################################################################################################################
-
+  nginx-gateway:
+    image: ulp/nginx-gateway:latest
+    ports:
+      - "182:80"
+##############################################################################################################################
 volumes:
   postgres_data:
     driver: local
