@@ -8,17 +8,13 @@ services:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - xpack.security.enabled=false
-
-    ports:
-      - "9200:9200"
-      - "9300:9300"
   ##########################################################################################################################
   db:
     image: postgres
     container_name: "postgres_db"
     volumes:
       - ./init-multi-postgres-databases.sh:/docker-entrypoint-initdb.d/init-multi-postgres-databases.sh
-    #  - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "9999:5432"
     environment:
@@ -30,7 +26,7 @@ services:
 
   ##########################################################################################################################
   registry:
-    image: dockerhub/sunbird-rc-core
+    image: dockerhub/sunbird-rc-core:v0.0.13
     container_name: "registry"
     volumes:
       - ./schemas:/home/sunbirdrc/config/public/_schemas
@@ -73,7 +69,7 @@ services:
       - redis_port=6379
       - manager_type=DefinitionsManager
     ports:
-      - "8081:8081"
+      - "18081:8081"
     depends_on:
       - es
       - db
@@ -83,7 +79,7 @@ services:
     container_name: "keycloak"
     volumes:
       - ./imports:/opt/jboss/keycloak/imports
-    #  - keycloak_data:/opt/jboss/keycloak
+      - keycloak_data:/opt/jboss/keycloak
     environment:
       - KEYCLOAK_LOGO=https://svgshare.com/i/hCs.svg
       - DB_VENDOR=postgres
@@ -99,8 +95,8 @@ services:
       - PROXY_ADDRESS_FORWARDING=true
       - VALIDATE_NONCE=false
     ports:
-      - "8080:8080"
-      - "9990:9990"
+      - "18080:8080"
+      - "19990:9990"
     depends_on:
       - db
   ##########################################################################################################################
@@ -113,12 +109,12 @@ services:
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: "*!73uK*9xLEsnhIR"
     ports:
-      - "8123:8123"
-      - "9000:9000"
+      - "18123:8123"
+      - "19000:9000"
   telemetry-service:
     image: dubea/telemetry-service1:latest
     ports:
-      - 9001:9001
+      - 19001:9001
     environment:
       telemetry_local_storage_type: "clickhouse"
       CLICKHOUSE_HOST: "http://telemetry-clickhouse:8123"
@@ -128,7 +124,7 @@ services:
       - telemetry_service_clickhouse
   ##########################################################################################################################
   bff_service:
-    image: dubea/bff:2
+    image: dubea/bff:1.0
     container_name: "bff-service"
     ports:
       - 3003:3000
@@ -164,7 +160,7 @@ services:
       - TELEMETRY_URL=https://ulp.uniteframework.io/telemetry
   ################################################################################################################################
   bulk_issuance:
-    image: dubea/bulk-issuance:1
+    image: dubea/bulk-issuance:1.0
     container_name: "bulk-issuance"
     ports:
       - 3007:3007
@@ -204,7 +200,7 @@ services:
     image: dubea/credential-ms:sbrc
     container_name: "credential_ms"
     ports:
-      - 3002:3333
+      - 13002:3333
     deploy:
       placement:
         constraints:
@@ -226,7 +222,7 @@ services:
     image: dubea/cred-schema-ms:sbrc
     container_name: "cred_schema_ms_service"
     ports:
-      - 3001:3000
+      - 13001:3000
     deploy:
       placement:
         constraints:
@@ -248,7 +244,7 @@ services:
     image: dubea/did-l3:sbrc
     container_name: "did_l3_service"
     ports:
-      - 3000:3332
+      - 13000:3332
     deploy:
       placement:
         constraints:
@@ -268,25 +264,25 @@ services:
   #############################################################################################################################
 
   rc-wallet:
-    image: dubea/ewallet:1
+    image: dubea/rc-ewallet:1.0
     container_name: "ewallet"
     volumes:
       - ./ewallet/config/config.json:/usr/share/nginx/html/assets/config/config.json
 
-    ports:
-      - "82:80"
   #################################################################################################################################
 
-  rc-varification:
-    image: dubea/varification-portal:2
+  rc-verification:
+    image: dubea/verification:1.0
     container_name: "verification-portal"
     volumes:
       - ./varification/config/config.json:/usr/share/nginx/html/assets/config/config.json
 
-    ports:
-      - "85:80"
 #############################################################################################################################
-
+  nginx-gateway:
+    image: ulp/nginx-gateway:latest
+    ports:
+      - "182:80"
+##############################################################################################################################
 volumes:
   postgres_data:
     driver: local
