@@ -95,7 +95,7 @@ services:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
       - KEYCLOAK_IMPORT=/opt/jboss/keycloak/imports/realm-export.json
-      - KEYCLOAK_FRONTEND_URL=https://localhost/auth
+      - KEYCLOAK_FRONTEND_URL=http://localhost:8080/auth
       - PROXY_ADDRESS_FORWARDING=true
       - VALIDATE_NONCE=false
     ports:
